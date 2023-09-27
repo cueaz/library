@@ -5,17 +5,26 @@ ARG DEBIAN_VERSION=12
 FROM debian:$DEBIAN_VERSION AS builder
 
 RUN set -eux; \
-    # check https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/blob/main/makepkg.conf?ref_type=heads
-    export CFLAGS="-O3 -pipe -fno-plt -fexceptions \
+    # Setup flags
+    # ref: https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/blob/main/makepkg.conf
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        # ref: https://github.com/aws/aws-graviton-getting-started/blob/main/c-c++.md
+        arm64) CFLAGS='-mcpu=neoverse-n1' ;; \
+        # ref: https://github.com/clearlinux-pkgs/gcc/blob/main/gcc.spec
+        amd64) CFLAGS='-march=westmere -mtune=sapphirerapids' ;; \
+        *) echo >&2 "error: unsupported architecture: $arch" && exit 1 ;; \
+    esac; \
+    export CFLAGS="$CFLAGS -O3 -pipe -fno-plt -fexceptions \
                    -Wp,-D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security \
                    -fstack-clash-protection -fcf-protection \
-                   -fPIC -flto=auto"; \
+                   -flto=auto"; \
     export CXXFLAGS="$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"; \
-    export LDFLAGS="-Wl,-O1,--sort-common,--as-needed,-z,relro,-z,now -Wl,--strip-all"; \
+    export LDFLAGS='-Wl,-O1,--sort-common,--as-needed,-z,relro,-z,now -Wl,--strip-all'; \
     export MAKEOPTS="-j$(cat /proc/cpuinfo | grep processor | wc -l)"; \
     apt update; \
-    # Install dependencies \
-    # check https://github.com/python/cpython/blob/main/.github/workflows/posix-deps-apt.sh
+    # Install dependencies
+    # ref: https://github.com/python/cpython/blob/main/.github/workflows/posix-deps-apt.sh
     apt install build-essential \
                 pkg-config \
                 git \
@@ -43,7 +52,7 @@ RUN set -eux; \
     # Build python
     git clone --depth 1 --branch "$PYTHON_VERSION" https://github.com/python/cpython; \
     pushd cpython; \
-    # build test modules as shared libraries
+    # test modules as shared libraries
     sed -i '/^# Test modules/a \*shared\*' Modules/Setup.stdlib.in; \
     cat Modules/Setup.stdlib.in; \
     ln -svrf Modules/Setup.stdlib Modules/Setup.local; \
@@ -78,18 +87,18 @@ RUN set -eux; \
     pyid="python$PYTHON_VERSION"; \
     pushd /rootfs/usr/local; \
     find . -maxdepth 1 ! -name bin ! -name lib ! -name . -exec rm -rv '{}' +; \
-    # cleanup bin
+    # bin cleanup
     pushd bin; \
     find . -maxdepth 1 ! -name "$pyid" ! -name . -exec rm -rv '{}' +; \
     ln -sv "$pyid" python3; \
     ln -sv python3 python; \
     popd; \
-    # cleanup lib
+    # lib cleanup
     pushd lib; \
     find . -maxdepth 1 ! -name "$pyid" ! -name . -exec rm -rv '{}' +; \
     pushd "$pyid"; \
     [ -z "$(ls lib-dynload | grep -v test | grep -v xxlimited)" ]; \
-    # lib-dynload dir should exist to remove 'Could not find platform dependent libraries <exec_prefix>' warning
+    # lib-dynload dir should exist to remove 'Could not find platform dependent libraries <exec_prefix>'
     rm -v lib-dynload/*; \
     # follow Debian convention
     rm -rv config-* \
