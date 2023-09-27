@@ -12,34 +12,34 @@ RUN set -eux; \
         # ref: https://github.com/aws/aws-graviton-getting-started/blob/main/c-c++.md
         arm64) CFLAGS='-mcpu=neoverse-n1' ;; \
         # ref: https://github.com/clearlinux-pkgs/gcc/blob/main/gcc.spec
-        amd64) CFLAGS='-march=westmere -mtune=sapphirerapids' ;; \
+        amd64) CFLAGS='-march=westmere -mtune=sapphirerapids -fcf-protection' ;; \
         *) echo >&2 "error: unsupported architecture: $arch" && exit 1 ;; \
     esac; \
+    # ref: # https://bugs.gentoo.org/700012
     export CFLAGS="$CFLAGS -O3 -pipe -fno-plt -fexceptions \
                    -Wp,-D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security \
-                   -fstack-clash-protection -fcf-protection \
-                   -flto=auto"; \
+                   -fstack-clash-protection"; \
     export CXXFLAGS="$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"; \
     export LDFLAGS='-Wl,-O1,--sort-common,--as-needed,-z,relro,-z,now -Wl,--strip-all'; \
     export MAKEOPTS="-j$(cat /proc/cpuinfo | grep processor | wc -l)"; \
-    apt update; \
     # Install dependencies
     # ref: https://github.com/python/cpython/blob/main/.github/workflows/posix-deps-apt.sh
-    apt install build-essential \
-                pkg-config \
-                git \
-                zlib1g-dev \
-                libbz2-dev \
-                liblzma-dev \
-                libffi-dev \
-                uuid-dev \
-                libssl-dev \
-                libb2-dev \
-                # not essential
-                libgdbm-dev \
-                libsqlite3-dev \
-                libncurses-dev \
-                libreadline-dev; \
+    apt update; \
+    apt install -y build-essential \
+                   pkg-config \
+                   git \
+                   zlib1g-dev \
+                   libbz2-dev \
+                   liblzma-dev \
+                   libffi-dev \
+                   uuid-dev \
+                   libssl-dev \
+                   libb2-dev \
+                   # not essential
+                   libgdbm-dev \
+                   libsqlite3-dev \
+                   libncurses-dev \
+                   libreadline-dev; \
     rm -rf /var/lib/apt/lists/*; \
     mkdir /work; \
     pushd /work; \
@@ -47,6 +47,9 @@ RUN set -eux; \
     git clone --depth 1 https://github.com/cloudflare/zlib; \
     pushd zlib; \
     ./configure --static; \
+    # switch '-mcpu=neoverse-n1' conflicts with '-march=armv8-a+crc' switch
+    # ref: https://stackoverflow.com/questions/53138447/conflicts-between-cpu-and-arch-while-building
+    sed -i 's/-march=armv8-a+crc//g' Makefile; \
     make "$MAKEOPTS" check; \
     popd; \
     # Build python
@@ -71,7 +74,7 @@ RUN set -eux; \
                 LIBSQLITE3_LIBS=-l:libsqlite3.a \
                 LIBUUID_LIBS=-l:libuuid.a \
                 PANEL_LIBS=-l:libpanelw.a \
-                ZLIB_LIBS=-l:../zlib/libz.a; \
+                ZLIB_LIBS=../zlib/libz.a; \
     make "$MAKEOPTS"; \
     mkdir /rootfs; \
     make install DESTDIR=/rootfs; \
