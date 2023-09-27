@@ -4,6 +4,10 @@ ARG DEBIAN_VERSION=12
 
 FROM debian:$DEBIAN_VERSION AS builder
 
+ARG PYTHON_VERSION
+
+SHELL ["/bin/bash", "-c"]
+
 RUN set -eux; \
     # Setup flags
     # ref: https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/blob/main/makepkg.conf
@@ -85,8 +89,9 @@ RUN set -eux; \
                 LIBUUID_LIBS=-l:libuuid.a \
                 PANEL_LIBS='-l:libpanelw.a -l:libncursesw.a -l:libtinfo.a' \
                 ZLIB_LIBS=../zlib/libz.a \
-                # do not link against libnsl (will be removed in 3.13)
-                py_cv_module_nis=n/a; \
+                # do not link against libnsl/libcrypt (will be removed in 3.13)
+                py_cv_module_nis=n/a \
+                py_cv_module__crypt=n/a; \
     make "$MAKEOPTS"; \
     make install DESTDIR=/rootfs; \
     popd; \
