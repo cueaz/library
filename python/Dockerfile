@@ -55,7 +55,8 @@ RUN set -eux; \
     # switch '-mcpu=neoverse-n1' conflicts with '-march=armv8-a+crc' switch
     # ref: https://stackoverflow.com/questions/53138447/conflicts-between-cpu-and-arch-while-building
     sed -i 's/-march=armv8-a+crc//g' Makefile; \
-    make "$MAKEOPTS" check; \
+    make "$MAKEOPTS"; \
+    make test; \
     popd; \
     # Build python
     git clone --depth 1 --branch "$PYTHON_VERSION" https://github.com/python/cpython; \
@@ -93,6 +94,7 @@ RUN set -eux; \
                 py_cv_module_nis=n/a \
                 py_cv_module__crypt=n/a; \
     make "$MAKEOPTS"; \
+    make test; \
     make install DESTDIR=/rootfs; \
     popd; \
     popd; \
