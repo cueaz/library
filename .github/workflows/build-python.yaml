@@ -42,12 +42,13 @@ jobs:
         DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
   
   build-and-push-images:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, [self-hosted, arm64]]
-      fail-fast: false
+    # strategy:
+    #   matrix:
+    #     os: [ubuntu-latest, [self-hosted, arm64]]
+    #   fail-fast: false
     
-    runs-on: ${{ matrix.os }}
+    # runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     needs: vars
 
