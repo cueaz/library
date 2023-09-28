@@ -148,6 +148,9 @@ RUN set -eux; \
 
 FROM gcr.io/distroless/cc-debian$DEBIAN_VERSION AS latest
 
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
 COPY --link --from=builder /rootfs/ /
 CMD ["python"]
 
