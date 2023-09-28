@@ -13,8 +13,9 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  TAG_BASE: ghcr.io/${{ github.actor }}
   IMG_NAME: python
+  TAG_BASE: ghcr.io/${{ github.actor }}/${{ env.IMG_NAME }}
+  CONTEXT: '{{defaultContext}}:${{ env.IMG_NAME }}'
   LABELS: |
     org.opencontainers.image.source=${{ github.event.repository.html_url }}
     org.opencontainers.image.description=${{ github.event.repository.description }}
@@ -22,6 +23,10 @@ env:
     org.opencontainers.image.revision=${{ github.sha }}
   PYTHON_VERSION: 3.11
   DEBIAN_VERSION: 12
+  DEBIAN_RELEASE: debian${{ env.DEBIAN_VERSION }}
+  BUILD_ARGS: |
+    PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+    DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
 
 jobs:
   build-and-push-images:
@@ -45,63 +50,57 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           target: check
-          context: '{{defaultContext}}:${{ env.IMG_NAME }}'
-          build-args: |
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-            DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
+          context: ${{ env.CONTEXT }}
+          build-args: ${{ env.BUILD_ARGS }}
 
       - name: Build and push Docker image (latest)
         uses: docker/build-push-action@v4
         with:
           target: latest
-          context: '{{defaultContext}}:${{ env.IMG_NAME }}'
+          context: ${{ env.CONTEXT }}
+          build-args: ${{ env.BUILD_ARGS }}
           push: true
           labels: ${{ env.LABELS }}
           tags: |
-            ${{ env.TAG_BASE }}/${{ env.IMG_NAME }}:latest
-            ${{ env.TAG_BASE }}/${{ env.IMG_NAME }}:${{ env.PYTHON_VERSION }}-latest
-          build-args: |
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-            DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
+            ${{ env.TAG_BASE }}
+            ${{ env.TAG_BASE }}:${{ env.PYTHON_VERSION }}
+            ${{ env.TAG_BASE }}:${{ env.PYTHON_VERSION }}-${{ env.DEBIAN_RELEASE }}
 
       - name: Build and push Docker image (debug)
         uses: docker/build-push-action@v4
         with:
           target: debug
-          context: '{{defaultContext}}:${{ env.IMG_NAME }}'
+          context: ${{ env.CONTEXT }}
+          build-args: ${{ env.BUILD_ARGS }}
           push: true
           labels: ${{ env.LABELS }}
           tags: |
-            ${{ env.TAG_BASE }}/${{ env.IMG_NAME }}:debug
-            ${{ env.TAG_BASE }}/${{ env.IMG_NAME }}:${{ env.PYTHON_VERSION }}-debug
-          build-args: |
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-            DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
+            ${{ env.TAG_BASE }}:debug
+            ${{ env.TAG_BASE }}:${{ env.PYTHON_VERSION }}-debug
+            ${{ env.TAG_BASE }}:${{ env.PYTHON_VERSION }}-${{ env.DEBIAN_RELEASE }}-debug
 
       - name: Build and push Docker image (nonroot)
         uses: docker/build-push-action@v4
         with:
           target: nonroot
-          context: '{{defaultContext}}:${{ env.IMG_NAME }}'
+          context: ${{ env.CONTEXT }}
+          build-args: ${{ env.BUILD_ARGS }}
           push: true
           labels: ${{ env.LABELS }}
           tags: |
-            ${{ env.TAG_BASE }}/${{ env.IMG_NAME }}:nonroot
-            ${{ env.TAG_BASE }}/${{ env.IMG_NAME }}:${{ env.PYTHON_VERSION }}-nonroot
-          build-args: |
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-            DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
+            ${{ env.TAG_BASE }}:nonroot
+            ${{ env.TAG_BASE }}:${{ env.PYTHON_VERSION }}-nonroot
+            ${{ env.TAG_BASE }}:${{ env.PYTHON_VERSION }}-${{ env.DEBIAN_RELEASE }}-nonroot
 
       - name: Build and push Docker image (debug-nonroot)
         uses: docker/build-push-action@v4
         with:
           target: debug-nonroot
-          context: '{{defaultContext}}:${{ env.IMG_NAME }}'
+          context: ${{ env.CONTEXT }}
+          build-args: ${{ env.BUILD_ARGS }}
           push: true
           labels: ${{ env.LABELS }}
           tags: |
-            ${{ env.TAG_BASE }}/${{ env.IMG_NAME }}:debug-nonroot
-            ${{ env.TAG_BASE }}/${{ env.IMG_NAME }}:${{ env.PYTHON_VERSION }}-debug-nonroot
-          build-args: |
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-            DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
+            ${{ env.TAG_BASE }}:debug-nonroot
+            ${{ env.TAG_BASE }}:${{ env.PYTHON_VERSION }}-debug-nonroot
+            ${{ env.TAG_BASE }}:${{ env.PYTHON_VERSION }}-${{ env.DEBIAN_RELEASE }}-debug-nonroot
