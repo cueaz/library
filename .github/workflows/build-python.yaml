@@ -80,7 +80,7 @@ jobs:
           build-args: ${{ needs.vars.outputs.build_args }}
           platforms: ${{ env.PLATFORMS }}
           push: true
-          labels: ${{ env.LABELS }}
+          labels: ${{ needs.vars.outputs.labels }}
           tags: |
             ${{ needs.vars.outputs.tag_base }}
             ${{ needs.vars.outputs.tag_base }}:${{ needs.vars.outputs.tag_end1 }}
@@ -96,7 +96,7 @@ jobs:
           build-args: ${{ needs.vars.outputs.build_args }}
           platforms: ${{ env.PLATFORMS }}
           push: true
-          labels: ${{ env.LABELS }}
+          labels: ${{ needs.vars.outputs.labels }}
           tags: |
             ${{ needs.vars.outputs.tag_base }}:${{ env.TARGET }}
             ${{ needs.vars.outputs.tag_base }}:${{ needs.vars.outputs.tag_end1 }}-${{ env.TARGET }}
@@ -112,7 +112,7 @@ jobs:
           build-args: ${{ needs.vars.outputs.build_args }}
           platforms: ${{ env.PLATFORMS }}
           push: true
-          labels: ${{ env.LABELS }}
+          labels: ${{ needs.vars.outputs.labels }}
           tags: |
             ${{ needs.vars.outputs.tag_base }}:${{ env.TARGET }}
             ${{ needs.vars.outputs.tag_base }}:${{ needs.vars.outputs.tag_end1 }}-${{ env.TARGET }}
@@ -128,7 +128,7 @@ jobs:
           build-args: ${{ needs.vars.outputs.build_args }}
           platforms: ${{ env.PLATFORMS }}
           push: true
-          labels: ${{ env.LABELS }}
+          labels: ${{ needs.vars.outputs.labels }}
           tags: |
             ${{ needs.vars.outputs.tag_base }}:${{ env.TARGET }}
             ${{ needs.vars.outputs.tag_base }}:${{ needs.vars.outputs.tag_end1 }}-${{ env.TARGET }}
