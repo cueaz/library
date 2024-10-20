@@ -1,6 +1,13 @@
 name: Build and push images (mlflow)
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - mlflow/**
+  schedule:
+    - cron: 0 */24 * * *
   workflow_dispatch:
 
 concurrency:
@@ -9,9 +16,8 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMG_NAME: mlflow
+  IMAGE_NAME: mlflow
   PLATFORMS: linux/amd64,linux/arm64
-  MLFLOW_VERSION: 2.17.0
   DEBIAN_VERSION: 12
   DEBIAN_RELEASE: bookworm
 
@@ -20,13 +26,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: pwd
+      # ref: https://github.com/orgs/community/discussions/26279#discussioncomment-10658026
+      - name: Check if latest version exists on the registry
+        run: |
+          set -eux
+          MLFLOW_VERSION="$(curl -s https://pypi.org/pypi/mlflow/json | jq -r '.info.version')"
+          echo "MLFLOW_VERSION=$MLFLOW_VERSION" >> $GITHUB_ENV
+          EXPECTED_TAG="$MLFLOW_VERSION-debian${{ env.DEBIAN_VERSION }}"
+          ENCODED_TOKEN="$(echo -n "${{ secrets.GITHUB_TOKEN }}" | base64)"
+          TAG_EXISTS="$(curl -s -H "Authorization: Bearer ${ENCODED_TOKEN}" "https://${{ env.REGISTRY }}/v2/${{ github.actor }}/${{ env.IMAGE_NAME }}/tags/list" | jq -r --arg TAG "$EXPECTED_TAG" '.tags[] | select(. == $TAG)')"
+          if [[ -n "$TAG_EXISTS" ]]; then
+            echo "TAG_EXISTS=true"  >> $GITHUB_ENV
+          else
+            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+          fi
 
     outputs:
-      tag_base: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMG_NAME }}
+      tag_exists: ${{ env.TAG_EXISTS }}
+      tag_base: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
       tag_end1: ${{ env.MLFLOW_VERSION }}
       tag_end2: ${{ env.MLFLOW_VERSION }}-debian${{ env.DEBIAN_VERSION }}
-      context: "{{defaultContext}}:${{ env.IMG_NAME }}"
+      context: "{{defaultContext}}:${{ env.IMAGE_NAME }}"
       labels: |
         org.opencontainers.image.source=${{ github.event.repository.html_url }}
         org.opencontainers.image.description=${{ github.event.repository.description }}
@@ -40,6 +60,7 @@ jobs:
   build-and-push-images:
     runs-on: ubuntu-latest
     needs: vars
+    if: ${{ needs.vars.outputs.tag_exists == 'false' }}
 
     permissions:
       contents: read
