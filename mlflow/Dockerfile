@@ -28,7 +28,7 @@ RUN --mount=type=cache,target="$PIP_CACHE_DIR" \
     pip install --prefix /rootfs/usr --no-compile mlflow=="$MLFLOW_VERSION" boto3; \
     mkdir /rootfs/etc; \
     printf '\
-exec: mlflow server --host 0.0.0.0 --port 8000 --backend-store-uri sqlite:////data/db\n\
+exec: mlflow server --host 0.0.0.0 --port 8000 --backend-store-uri sqlite:////data/db --serve-artifacts\n\
 dbs:\n\
   - path: /data/db\n\
     replicas:\n\
