@@ -48,7 +48,7 @@ os.execlp("litestream", "litestream", "replicate")\n\
 FROM "gcr.io/distroless/python3-debian$DEBIAN_VERSION:nonroot" as runtime
 
 COPY --link --from=builder /rootfs /
-COPY --link --from=builder --chown=nonroot:nonroot /data /data
+COPY --link --from=builder --chown=nonroot /data /data
 
 COPY --link --from=litestream/litestream /usr/local/bin/litestream /usr/local/bin/litestream
 

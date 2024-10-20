@@ -60,10 +60,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{ needs.vars.outputs.context }}
           build-args: ${{ needs.vars.outputs.build_args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           platforms: ${{ env.PLATFORMS }}
           push: true
           provenance: false
