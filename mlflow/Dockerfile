@@ -48,7 +48,10 @@ os.execlp("litestream", "litestream", "replicate")\n\
 FROM "gcr.io/distroless/python3-debian$DEBIAN_VERSION:nonroot" as runtime
 
 COPY --link --from=builder /rootfs /
-COPY --link --from=builder --chown=nonroot /data /data
+# --link is not compatible with --chown, ci failed
+# ref: https://github.com/moby/buildkit/issues/2987#issuecomment-1396753289
+#COPY -from=builder --chown=nonroot:nonroot /data /data
+COPY --link --from=builder --chown=65532:65532 /data /data
 
 COPY --link --from=litestream/litestream /usr/local/bin/litestream /usr/local/bin/litestream
 
