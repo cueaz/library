@@ -60,7 +60,7 @@ jobs:
   build-and-push-images:
     runs-on: ubuntu-latest
     needs: vars
-    if: ${{ needs.vars.outputs.tag_exists == 'false' }}
+    if: ${{ (github.event_name == 'workflow_dispatch') || (needs.vars.outputs.tag_exists == 'false') }}
 
     permissions:
       contents: read
