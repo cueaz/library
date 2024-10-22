@@ -1,13 +1,6 @@
 name: Build and push images (python)
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - python/**
-  schedule:
-    - cron: 0 */12 * * *
   workflow_dispatch:
 
 concurrency:
@@ -26,12 +19,12 @@ jobs:
 
     steps:
       - run: pwd
-  
+
     outputs:
       tag_base: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMG_NAME }}
       tag_end1: ${{ env.PYTHON_VERSION }}
       tag_end2: ${{ env.PYTHON_VERSION }}-debian${{ env.DEBIAN_VERSION }}
-      context: '{{defaultContext}}:${{ env.IMG_NAME }}'
+      context: "{{defaultContext}}:${{ env.IMG_NAME }}"
       labels: |
         org.opencontainers.image.source=${{ github.event.repository.html_url }}
         org.opencontainers.image.description=${{ github.event.repository.description }}
@@ -40,13 +33,13 @@ jobs:
       build_args: |
         PYTHON_VERSION=${{ env.PYTHON_VERSION }}
         DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
-  
+
   build-and-push-images:
     # strategy:
     #   matrix:
     #     os: [ubuntu-latest, [self-hosted, arm64]]
     #   fail-fast: false
-    
+
     # runs-on: ${{ matrix.os }}
     runs-on: ubuntu-latest
 
