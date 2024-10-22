@@ -68,14 +68,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and check image (check)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           target: check
           context: ${{ needs.vars.outputs.context }}
           build-args: ${{ needs.vars.outputs.build_args }}
 
       - name: Build and push image (latest)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           target: latest
           context: ${{ needs.vars.outputs.context }}
@@ -91,7 +91,7 @@ jobs:
       - name: Build and push image (debug)
         env:
           TARGET: debug
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           target: ${{ env.TARGET }}
           context: ${{ needs.vars.outputs.context }}
@@ -107,7 +107,7 @@ jobs:
       - name: Build and push image (nonroot)
         env:
           TARGET: nonroot
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           target: ${{ env.TARGET }}
           context: ${{ needs.vars.outputs.context }}
@@ -123,7 +123,7 @@ jobs:
       - name: Build and push image (debug-nonroot)
         env:
           TARGET: debug-nonroot
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           target: ${{ env.TARGET }}
           context: ${{ needs.vars.outputs.context }}
