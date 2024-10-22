@@ -1,10 +1,11 @@
-# syntax=docker/dockerfile:1.4
+# syntax=docker/dockerfile:1
+# renovate: datasource=pypi depName=mlflow packageName=mlflow
 ARG MLFLOW_VERSION=2.17.0
 
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_RELEASE=bookworm
 
-FROM "buildpack-deps:$DEBIAN_RELEASE" as builder
+FROM "buildpack-deps:$DEBIAN_RELEASE" AS builder
 
 ARG MLFLOW_VERSION
 
@@ -45,7 +46,7 @@ os.execlp("litestream", "litestream", "replicate")\n\
     chmod +x /rootfs/usr/local/bin/start; \
     mkdir /data;
 
-FROM "gcr.io/distroless/python3-debian$DEBIAN_VERSION:nonroot" as runtime
+FROM "gcr.io/distroless/python3-debian$DEBIAN_VERSION:nonroot" AS runtime
 
 COPY --link --from=builder /rootfs /
 # --link is not compatible with --chown, ci failed
