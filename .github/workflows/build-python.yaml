@@ -21,7 +21,7 @@ jobs:
       - run: pwd
 
     outputs:
-      tag_base: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMG_NAME }}
+      tag_base: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMG_NAME }}
       tag_end1: ${{ env.PYTHON_VERSION }}
       tag_end2: ${{ env.PYTHON_VERSION }}-debian${{ env.DEBIAN_VERSION }}
       context: "{{defaultContext}}:${{ env.IMG_NAME }}"
@@ -57,7 +57,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and check image (check)
