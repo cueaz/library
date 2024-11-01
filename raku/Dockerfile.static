@@ -1,0 +1,83 @@
+# syntax=docker/dockerfile:1
+
+# renovate: datasource=github-releases depName=rakudo packageName=rakudo/star
+ARG RAKUDO_VERSION=2024.10
+# renovate: datasource=github-releases depName=zstd packageName=facebook/zstd
+ARG ZSTD_VERSION=v1.5.6
+
+ARG DEBIAN_VERSION=12
+ARG DEBIAN_RELEASE=bookworm
+
+FROM "buildpack-deps:$DEBIAN_RELEASE" AS builder
+
+ARG RAKUDO_VERSION
+ARG ZSTD_VERSION
+
+WORKDIR /work
+
+SHELL ["/bin/bash", "-c"]
+
+RUN set -eux; \
+    zstd_url="https://github.com/facebook/zstd/releases/download/$ZSTD_VERSION/zstd-${ZSTD_VERSION:1}.tar.gz"; \
+    curl -fsSL "$zstd_url" -o zstd.tar.gz; \
+    mkdir zstd; \
+    tar -xzf zstd.tar.gz --strip-components=1 -C zstd; \
+    pushd zstd/lib; \
+    make libzstd.a-mt CFLAGS='-O3 -fPIC'; \
+    machine="$(gcc -dumpmachine)"; \
+    # debian's static lib is not built with -fPIC
+    rm "/usr/lib/$machine/"libzstd.{so,a}; \
+    cp libzstd.a "/usr/lib/$machine"; \
+    popd; \
+    rakudo_url="https://github.com/rakudo/star/releases/download/$RAKUDO_VERSION/rakudo-star-$RAKUDO_VERSION.tar.gz"; \
+    curl -fsSL "$rakudo_url" -o rakudo.tar.gz; \
+    mkdir rakudo; \
+    tar -xzf rakudo.tar.gz --strip-components=1 -C rakudo; \
+    pushd rakudo/src; \
+    pushd moarvm-*/MoarVM-*; \
+    sed -e "/^\$config{mainlibs}/a \$config{impinst} = '@thirdpartylibs@ ' . \$config{impinst};" \
+        -e "/^\$config{mainlibs}/a \$config{objflags} = '-fPIC ' . \$config{objflags};" \
+        -i Configure.pl; \
+    perl Configure.pl --static --prefix=/sdk; \
+    make; \
+    make install; \
+    mv /sdk/lib/{libmoar.a,libmoar_orig.a}; \
+    printf 'INPUT(-lmoar_orig -lcmp -ldyncall_s -ldyncallback_s -ldynload_s -ltommath -luv -lsha1 -lzstd -lm)' > /sdk/lib/libmoar.a; \
+    popd; \
+    pushd nqp-*/nqp-*; \
+    perl Configure.pl --backends=moar --with-moar=/sdk/bin/moar --prefix=/sdk; \
+    make; \
+    make install; \
+    popd; \
+    pushd rakudo-*/rakudo-*; \
+    # TODO: raku script dies, temporary fix
+    # ref: https://github.com/rakudo/rakudo/blob/76f62fe7b067875b492daf15f336ba37b8ab6d93/tools/templates/moar/Makefile.in#L106
+    # $ -> $$ (Makefile) -> \$\$ (sed), ' -> '\'' (bash)
+    sed -i 's|\$(NOECHO)@bpm(RUN_CLEAN_TARGET_FILES)@|\$(NOECHO)bash -c '\''d="\$\$1"; shift; for f in "\$\$@"; do rm -f "\$\$d/\$\$f"; done;'\'' --|g' tools/templates/moar/Makefile.in; \
+    # do not inherit from nqp (/sdk/share/nqp)
+    sed -i '/\$nqp_config->{static_nqp_home} =/ s/= .*/= \$config->{nqp_home};/' tools/lib/NQP/Config/Rakudo.pm; \
+    perl Configure.pl --backends=moar --with-nqp=/sdk/bin/nqp --prefix=/usr/local  --nqp-home=/usr/local/share/nqp; \
+    make; \
+    make DESTDIR=/rootfs install; \
+    # ref: https://github.com/rakudo/rakudo/blob/76f62fe7b067875b492daf15f336ba37b8ab6d93/src/vm/moar/runner/main.c#L228
+    cp -r /sdk/share/nqp /rootfs/usr/local/share; \
+    popd; \
+    popd; \
+    pushd /rootfs/usr/local/bin; \
+    find . -maxdepth 1 ! -name rakudo ! -name rakudo-debug ! -name . -exec rm -v '{}' +; \
+    ln -s rakudo raku; \
+    ln -s rakudo-debug raku-debug; \
+    popd; \
+    find /rootfs;
+
+
+FROM "gcr.io/distroless/base-nossl-debian$DEBIAN_VERSION:nonroot" AS runtime
+
+COPY --link --from=builder /rootfs/ /
+
+ENTRYPOINT ["raku"]
+
+
+FROM runtime AS check
+
+RUN ["raku", "--version"]
