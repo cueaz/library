@@ -38,14 +38,14 @@ RUN set -eux; \
     sed -e "/^\$config{mainlibs}/a \$config{impinst} = '@thirdpartylibs@ ' . \$config{impinst};" \
         -e "/^\$config{mainlibs}/a \$config{objflags} = '-fPIC ' . \$config{objflags};" \
         -i Configure.pl; \
-    perl Configure.pl --static --prefix=/sdk; \
+    perl Configure.pl --static --prefix=/usr/local; \
     make; \
     make install; \
-    mv /sdk/lib/{libmoar.a,libmoar_orig.a}; \
-    printf 'INPUT(-lmoar_orig -lcmp -ldyncall_s -ldyncallback_s -ldynload_s -ltommath -luv -lsha1 -lzstd -lm)' > /sdk/lib/libmoar.a; \
+    mv /usr/local/lib/{libmoar.a,libmoar_orig.a}; \
+    printf 'INPUT(-lmoar_orig -lcmp -ldyncall_s -ldyncallback_s -ldynload_s -ltommath -luv -lsha1 -lzstd -lm)' > /usr/local/lib/libmoar.a; \
     popd; \
     pushd nqp-*/nqp-*; \
-    perl Configure.pl --backends=moar --with-moar=/sdk/bin/moar --prefix=/sdk; \
+    perl Configure.pl --backends=moar --prefix=/usr/local; \
     make; \
     make install; \
     popd; \
@@ -54,13 +54,11 @@ RUN set -eux; \
     # ref: https://github.com/rakudo/rakudo/blob/76f62fe7b067875b492daf15f336ba37b8ab6d93/tools/templates/moar/Makefile.in#L106
     # $ -> $$ (Makefile) -> \$\$ (sed), ' -> '\'' (bash)
     sed -i 's|\$(NOECHO)@bpm(RUN_CLEAN_TARGET_FILES)@|\$(NOECHO)bash -c '\''d="\$\$1"; shift; for f in "\$\$@"; do rm -f "\$\$d/\$\$f"; done;'\'' --|g' tools/templates/moar/Makefile.in; \
-    # do not inherit from nqp (/sdk/share/nqp)
-    sed -i '/\$nqp_config->{static_nqp_home} =/ s/= .*/= \$config->{nqp_home};/' tools/lib/NQP/Config/Rakudo.pm; \
-    perl Configure.pl --backends=moar --with-nqp=/sdk/bin/nqp --prefix=/usr/local  --nqp-home=/usr/local/share/nqp; \
+    perl Configure.pl --backends=moar --prefix=/usr/local; \
     make; \
     make DESTDIR=/rootfs install; \
     # ref: https://github.com/rakudo/rakudo/blob/76f62fe7b067875b492daf15f336ba37b8ab6d93/src/vm/moar/runner/main.c#L228
-    cp -r /sdk/share/nqp /rootfs/usr/local/share; \
+    cp -r /usr/local/share/nqp /rootfs/usr/local/share; \
     popd; \
     popd; \
     pushd /rootfs/usr/local/bin; \
@@ -81,3 +79,5 @@ ENTRYPOINT ["raku"]
 FROM runtime AS check
 
 RUN ["raku", "--version"]
+
+# TODO: dynext/libperl6_ops_moar.so <- PIC required by this lib
