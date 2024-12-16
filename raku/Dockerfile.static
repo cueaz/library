@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # renovate: datasource=github-releases depName=rakudo packageName=rakudo/star
-ARG RAKUDO_VERSION=2024.10
+ARG RAKUDO_VERSION=2024.12
 # renovate: datasource=github-releases depName=zstd packageName=facebook/zstd
 ARG ZSTD_VERSION=v1.5.6
 
