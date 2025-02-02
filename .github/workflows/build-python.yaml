@@ -1,6 +1,11 @@
 name: Build and push images (python)
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - python/**
   workflow_dispatch:
 
 concurrency:
@@ -9,30 +14,31 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMG_NAME: python
-  PYTHON_VERSION: 3.11
-  DEBIAN_VERSION: 12
+  IMAGE_NAME: python
 
 jobs:
   vars:
     runs-on: ubuntu-latest
 
     steps:
-      - run: pwd
+      - uses: actions/checkout@v4
+      - run: |
+          set -eux
+          PYTHON_VERSION="$(grep -oP '(?<=PYTHON_VERSION=)[0-9.]+' "${{ env.IMAGE_NAME }}/Dockerfile")"
+          DEBIAN_VERSION="$(grep -oP '(?<=DEBIAN_VERSION=)[0-9.]+' "${{ env.IMAGE_NAME }}/Dockerfile")"
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
+          echo "DEBIAN_VERSION=$DEBIAN_VERSION" >> $GITHUB_ENV
 
     outputs:
-      tag_base: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMG_NAME }}
+      tag_base: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
       tag_end1: ${{ env.PYTHON_VERSION }}
       tag_end2: ${{ env.PYTHON_VERSION }}-debian${{ env.DEBIAN_VERSION }}
-      context: "{{defaultContext}}:${{ env.IMG_NAME }}"
+      context: "{{defaultContext}}:${{ env.IMAGE_NAME }}"
       labels: |
         org.opencontainers.image.source=${{ github.event.repository.html_url }}
         org.opencontainers.image.description=${{ github.event.repository.description }}
         org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
         org.opencontainers.image.revision=${{ github.sha }}
-      build_args: |
-        PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-        DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
 
   build-and-push-images:
     # strategy:
@@ -65,14 +71,16 @@ jobs:
         with:
           target: check
           context: ${{ needs.vars.outputs.context }}
-          build-args: ${{ needs.vars.outputs.build_args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and push image (latest)
         uses: docker/build-push-action@v6
         with:
           target: latest
           context: ${{ needs.vars.outputs.context }}
-          build-args: ${{ needs.vars.outputs.build_args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           provenance: false
           labels: ${{ needs.vars.outputs.labels }}
@@ -88,7 +96,8 @@ jobs:
         with:
           target: ${{ env.TARGET }}
           context: ${{ needs.vars.outputs.context }}
-          build-args: ${{ needs.vars.outputs.build_args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           provenance: false
           labels: ${{ needs.vars.outputs.labels }}
@@ -104,7 +113,8 @@ jobs:
         with:
           target: ${{ env.TARGET }}
           context: ${{ needs.vars.outputs.context }}
-          build-args: ${{ needs.vars.outputs.build_args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           provenance: false
           labels: ${{ needs.vars.outputs.labels }}
@@ -120,7 +130,8 @@ jobs:
         with:
           target: ${{ env.TARGET }}
           context: ${{ needs.vars.outputs.context }}
-          build-args: ${{ needs.vars.outputs.build_args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           provenance: false
           labels: ${{ needs.vars.outputs.labels }}
