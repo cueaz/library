@@ -52,8 +52,7 @@ RUN set -eux; \
                    -Wp,-D_FORTIFY_SOURCE=3 -Wformat -Werror=format-security \
                    -fstack-protector-strong \
                    -fstack-clash-protection \
-                   -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer \
-                   -flto=auto"; \
+                   -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"; \
     export CXXFLAGS="$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"; \
     export LDFLAGS='-Wl,-O1,--sort-common,--as-needed,-z,relro,-z,now -Wl,--strip-all'; \
     export MAKEOPTS="-j$(cat /proc/cpuinfo | grep processor | wc -l)"; \
@@ -62,6 +61,7 @@ RUN set -eux; \
     # 3. build zlib (cloudflare fork)
     git clone --depth 1 https://github.com/cloudflare/zlib; \
     pushd zlib; \
+    rm -r .git; \
     ./configure --static; \
     # switch '-mcpu=neoverse-n1' conflicts with '-march=armv8-a+crc' switch
     # ref: https://stackoverflow.com/questions/53138447/conflicts-between-cpu-and-arch-while-building
@@ -72,6 +72,7 @@ RUN set -eux; \
     # 4. build python
     git clone --depth 1 --branch "v$PYTHON_VERSION" https://github.com/python/cpython; \
     pushd cpython; \
+    rm -r .git; \
     # test modules as shared libraries
     sed -i '/^# Test modules/a \*shared\*' Modules/Setup.stdlib.in; \
     cat Modules/Setup.stdlib.in; \
@@ -119,7 +120,7 @@ RUN set -eux; \
     pushd lib; \
     find . -maxdepth 1 ! -name "$pyid" ! -name . -exec rm -rv '{}' +; \
     pushd "$pyid"; \
-    [ -z "$(ls lib-dynload | grep -v test | grep -v xxlimited)" ]; \
+    [ -z "$(ls lib-dynload | grep -v test | grep -v xxlimited | grep -v xxsubtype)" ]; \
     # lib-dynload dir should exist to remove 'Could not find platform dependent libraries <exec_prefix>'
     rm -v lib-dynload/*; \
     # follow debian convention
