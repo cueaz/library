@@ -136,6 +136,9 @@ RUN set -eux; \
     popd; \
     popd; \
     popd; \
+    # debian 13 uses /usr/share/terminfo
+    mkdir -p /rootfs/lib; \
+    cp -rv /lib/terminfo /rootfs/lib/terminfo; \
     # 6. print contents
     set +x; after="$(set +x; find /rootfs)"; set -x; \
     diff <(set +x; echo "$before") <(set +x; echo "$after") || true; \
