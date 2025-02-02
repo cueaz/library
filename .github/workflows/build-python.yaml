@@ -41,13 +41,12 @@ jobs:
         org.opencontainers.image.revision=${{ github.sha }}
 
   build-and-push-images:
-    # strategy:
-    #   matrix:
-    #     os: [ubuntu-latest, [self-hosted, arm64]]
-    #   fail-fast: false
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+      fail-fast: false
 
-    # runs-on: ${{ matrix.os }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     needs: vars
 
