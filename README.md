@@ -12,7 +12,7 @@ As of 2025-02-03:
 | Image                     | Python Version | Image Size |             Platform              |
 | ------------------------- | :------------: | :--------: | :-------------------------------: |
 | gcr.io/distroless/python3 | 3.11 (debian)  |   ~65MB    | amd64, arm64, arm, s390x, ppc64le |
-| ghcr.io/cueaz/python      | 3.13 (latest)  |   ~46MB    |           amd64, arm64            |
+| ghcr.io/cueaz/python      | 3.13 (latest)  |   ~56MB    |           amd64, arm64            |
 
 ## MLflow + Litestream: [`ghcr.io/cueaz/mlflow`](//github.com/cueaz/library/pkgs/container/mlflow)
 
