@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # renovate: datasource=python-version depName=python packageName=python
-ARG PYTHON_VERSION=3.13.1
+ARG PYTHON_VERSION=3.13.2
 ARG DEBIAN_VERSION=12
 
 FROM "debian:$DEBIAN_VERSION" AS builder
