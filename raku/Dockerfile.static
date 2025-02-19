@@ -3,7 +3,7 @@
 # renovate: datasource=github-releases depName=rakudo packageName=rakudo/star
 ARG RAKUDO_VERSION=2024.12
 # renovate: datasource=github-releases depName=zstd packageName=facebook/zstd
-ARG ZSTD_VERSION=v1.5.6
+ARG ZSTD_VERSION=v1.5.7
 
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_RELEASE=bookworm
