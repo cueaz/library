@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # renovate: datasource=pypi depName=mlflow packageName=mlflow
-ARG MLFLOW_VERSION=3.1.3
+ARG MLFLOW_VERSION=3.1.4
 
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_RELEASE=bookworm
