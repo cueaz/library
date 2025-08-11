@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: |
           set -eux
           MLFLOW_VERSION="$(grep -oP '(?<=MLFLOW_VERSION=)[0-9.]+' "${{ env.IMAGE_NAME }}/Dockerfile")"
