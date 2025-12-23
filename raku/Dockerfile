@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # renovate: datasource=github-releases depName=rakudo packageName=rakudo/star
-ARG RAKUDO_VERSION=2025.11
+ARG RAKUDO_VERSION=2025.12
 
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_RELEASE=bookworm
