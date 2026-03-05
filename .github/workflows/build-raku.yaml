@@ -64,7 +64,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and check image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           target: check
           context: ${{ needs.vars.outputs.context }}
@@ -73,7 +73,7 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
 
       - name: Build and push image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           target: runtime
           context: ${{ needs.vars.outputs.context }}
